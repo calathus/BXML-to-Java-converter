@@ -1,42 +1,40 @@
 BXML to Java converter.
 
-This is release with Apache 2 licence.
+This is released with Apache 2 licence.
 
 ----
 
-Apache Pivot uses a XML file called bxml.
-This tool convert the BXML file to equivalent Java source code.
+Apache Pivot uses a XML file called BXML.
+This tool converts BXML file to equivalent Java source code.
 
 There are some limitation:
 1) javascript is not supported.
-2) Listner is not mapped to Java also
+2) Listner is not mapped to Java.
 
 ----
 
 The Design:
 
-This is desigened as an extension of the current Apache Pivot source code line.
-Java source code will be generated as by product of evaluation BXMLSerialiser's readObject.
-The idea is to intercept the Pivot class instace creation, and generate corresponding Java souce code.
-So BXMLSerialiser was modified to call back these emittion functions.
+Java source code will be generated during BXMLSerialiser's readObject evaluation as by the product.
+The idea is to intercept the Pivot class instance creation/modification, and generate corresponding Java souce code to emulate the actions.
+BXMLSerializer was modified to call back these emittion functions.
 
 ----
 Installation:
 
-The current project is minimal. it contains only required files to build the tool.
-This assume teh latest pivot folder.
-
-copy the folder into the current pivot folder created by chcking out by svn.
-(this will override BXMLSerialiser.java, so you mayneed to copy the original)
+This is desigened as an extension of the current Apache Pivot source code line.
+The current project has minimal files. 
+In order to build this tool, copy the folder into the latest pivot folder created by chcking out by svn.
+(this will override BXMLSerializer.java, so you may need to copy the original before this)
 
 ---
 How to run/test:
 
-I use eclipse to build and run this tool.
+Use eclipse to build and run this tool.
 
 You can run BXML2JavaConverterTest.java.
-this will convert all bxml files under tutorial, and generate java source file in the same folder.
-The Java fiel start with "_" so it is easy to distingish generated file from others.
+this will convert all bxml files under tutorial folder, and generate java source files in the same folder.
+The generated Java file name starts with "_". so it is easy to distingish generated file from others.
 
 ----
 
