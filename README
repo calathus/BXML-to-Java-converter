@@ -1,0 +1,516 @@
+BXML to Java converter.
+
+This is release with Apache 2 licence.
+
+----
+
+Apache Pivot uses a XML file called bxml.
+This tool convert the BXML file to equivalent Java source code.
+
+There are some limitation:
+1) javascript is not supported.
+2) Listner is not mapped to Java also
+
+----
+
+The Design:
+
+This is desigened as an extension of the current Apache Pivot source code line.
+Java source code will be generated as by product of evaluation BXMLSerialiser's readObject.
+The idea is to intercept the Pivot class instace creation, and generate corresponding Java souce code.
+So BXMLSerialiser was modified to call back these emittion functions.
+
+----
+Installation:
+
+The current project is minimal. it contains only required files to build the tool.
+This assume teh latest pivot folder.
+
+copy the folder into the current pivot folder created by chcking out by svn.
+(this will override BXMLSerialiser.java, so you mayneed to copy the original)
+
+---
+How to run/test:
+
+I use eclipse to build and run this tool.
+
+You can run BXML2JavaConverterTest.java.
+this will convert all bxml files under tutorial, and generate java source file in the same folder.
+The Java fiel start with "_" so it is easy to distingish generated file from others.
+
+----
+
+Examples:
+stock_tracker_window.bxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<stocktracker:StockTrackerWindow title="%stockTracker" maximized="true"
+    xmlns:bxml="http://pivot.apache.org/bxml"
+    xmlns:content="org.apache.pivot.wtk.content"
+    xmlns:stocktracker="org.apache.pivot.tutorials.stocktracker"
+    xmlns="org.apache.pivot.wtk">
+    <TablePane styles="{padding:8, horizontalSpacing:6, verticalSpacing:6}">
+        <columns>
+            <TablePane.Column width="1*" />
+        </columns>
+
+        <TablePane.Row height="-1">
+            <Label text="%stockTracker"
+                styles="{font:{size:14, bold:true}, verticalAlignment:'center'}" />
+        </TablePane.Row>
+
+        <TablePane.Row height="1*">
+            <SplitPane splitRatio="0.4">
+                <left>
+                    <Border styles="{color:10}">
+                        <ScrollPane horizontalScrollBarPolicy="fill_to_capacity"
+                            verticalScrollBarPolicy="fill_to_capacity">
+                            <StackPane>
+                                <TableView bxml:id="stocksTableView" selectMode="multi"
+                                    styles="{showHorizontalGridLines:false}">
+                                    <columns>
+                                        <TableView.Column name="symbol"
+                                            headerData="%symbol" width="1*" />
+                                        <TableView.Column name="value" headerData="%value" width="1*">
+                                            <cellRenderer>
+                                                <content:TableViewNumberCellRenderer styles="{horizontalAlignment:'right'}"
+                                                    numberFormat="$$0.00"/>
+                                            </cellRenderer>
+                                        </TableView.Column>
+                                        <TableView.Column name="change" headerData="%change" width="1*">
+                                            <cellRenderer>
+                                                <stocktracker:ChangeCellRenderer styles="{horizontalAlignment:'right'}"
+                                                    numberFormat="+0.00;-0.00"/>
+                                            </cellRenderer>
+                                        </TableView.Column>
+                                    </columns>
+                                </TableView>
+                            </StackPane>
+
+                            <columnHeader>
+                                <TableViewHeader tableView="$stocksTableView" sortMode="single_column"/>
+                            </columnHeader>
+                        </ScrollPane>
+                    </Border>
+                </left>
+
+                <right>
+                    <Border styles="{padding:6, color:10}">
+                        <bxml:include bxml:id="detailPane" src="detail_pane.bxml"/>
+                    </Border>
+                </right>
+            </SplitPane>
+        </TablePane.Row>
+
+        <TablePane.Row height="-1">
+            <BoxPane styles="{horizontalAlignment:'left', verticalAlignment:'center'}">
+                <Label text="%symbol" styles="{font:{bold:true}}" />
+                <TextInput bxml:id="symbolTextInput" textSize="10"
+                    maximumLength="8" />
+                <LinkButton bxml:id="addSymbolButton" enabled="false"
+                    tooltipText="%addSymbol">
+                    <content:ButtonData icon="@add.png" />
+                </LinkButton>
+                <LinkButton bxml:id="removeSymbolsButton" enabled="false"
+                    tooltipText="%removeSymbol">
+                    <content:ButtonData icon="@delete.png" />
+                </LinkButton>
+            </BoxPane>
+        </TablePane.Row>
+
+        <TablePane.Row height="-1">
+            <TablePane>
+                <columns>
+                    <TablePane.Column width="1*"/>
+                    <TablePane.Column width="-1"/>
+                </columns>
+
+                <TablePane.Row>
+                    <BoxPane>
+                        <Label text="%lastUpdate"/>
+                        <Label bxml:id="lastUpdateLabel"/>
+                    </BoxPane>
+                    <BoxPane styles="{horizontalAlignment:'right'}">
+                        <Label text="%dataProvidedBy" />
+                        <LinkButton bxml:id="yahooFinanceButton"
+                            buttonData="%yahooFinance" />
+                    </BoxPane>
+                </TablePane.Row>
+            </TablePane>
+        </TablePane.Row>
+    </TablePane>
+</stocktracker:StockTrackerWindow>
+
+---------------------
+detail_pane.bxml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<BoxPane orientation="vertical" styles="{fill:true}"
+    xmlns:bxml="http://pivot.apache.org/bxml"
+    xmlns:stocktracker="org.apache.pivot.tutorials.stocktracker"
+    xmlns="org.apache.pivot.wtk">
+    <Label textKey="companyName" styles="{font:{size:12, bold:true}}"/>
+
+    <Separator/>
+
+    <Form styles="{padding:0, fill:true, showFlagIcons:false, showFlagHighlight:false,
+        leftAlignLabels:true}">
+        <Form.Section>
+            <bxml:define>
+                <stocktracker:ValueMapping bxml:id="valueMapping"/>
+                <stocktracker:ChangeMapping bxml:id="changeMapping"/>
+                <stocktracker:VolumeMapping bxml:id="volumeMapping"/>
+            </bxml:define>
+
+            <Label bxml:id="valueLabel" Form.label="%value"
+                textKey="value" textBindMapping="$valueMapping"
+                styles="{horizontalAlignment:'right'}"/>
+            <Label bxml:id="changeLabel" Form.label="%change"
+                textKey="change" textBindMapping="$changeMapping"
+                styles="{horizontalAlignment:'right'}"/>
+            <Label bxml:id="openingValueLabel" Form.label="%openingValue"
+                textKey="openingValue" textBindMapping="$valueMapping"
+                styles="{horizontalAlignment:'right'}"/>
+            <Label bxml:id="highValueLabel" Form.label="%highValue"
+                textKey="highValue" textBindMapping="$valueMapping"
+                styles="{horizontalAlignment:'right'}"/>
+            <Label bxml:id="lowValueLabel" Form.label="%lowValue"
+                textKey="lowValue" textBindMapping="$valueMapping"
+                styles="{horizontalAlignment:'right'}"/>
+            <Label bxml:id="volumeLabel" Form.label="%volume"
+                textKey="volume" textBindMapping="$volumeMapping"
+                styles="{horizontalAlignment:'right'}"/>
+        </Form.Section>
+    </Form>
+</BoxPane>
+
+=======================================
+first one will include the seconde bxml file.
+
+follwoig is the converted Java codes:
+
+ package org.apache.pivot.tutorials.stocktracker;
+
+import java.net.*;
+import org.apache.pivot.wtk.converter.CodeEmitterRuntime;
+import org.apache.pivot.wtk.*;
+import org.apache.pivot.wtk.content.*;
+import org.apache.pivot.wtk.effects.easing.*;
+import org.apache.pivot.wtk.effects.*;
+import org.apache.pivot.wtk.media.*;
+import org.apache.pivot.wtk.skin.*;
+import org.apache.pivot.wtk.text.*;
+import org.apache.pivot.wtk.validation.*;
+import org.apache.pivot.collections.adapter.*;
+import org.apache.pivot.collections.concurrent.*;
+import org.apache.pivot.collections.immutable.*;
+import org.apache.pivot.collections.*;
+
+public class _StockTrackerWindow implements Application {
+    private Window window = null;
+
+    @Override
+    public void startup(Display display, Map<String, String> properties) throws Exception {
+        //BXMLSerializer bxmlSerializer = new BXMLSerializer();
+        //window = (Window)bxmlSerializer.readObject(getClass().getResource("stock_tracker_window.bxml"));
+        final Object obj = getComponent();
+        if (obj instanceof Window) {;
+            window = (Window)obj;
+        } else if (obj instanceof Component) {
+            window = new Window();
+            window.setContent((Component)obj);
+            window.setTitle("stock_tracker_window.bxml");
+        } else {
+            System.out.println("getComponent returned object with type: "+obj.getClass());
+        }
+        window.open(display);
+    }
+
+    @Override
+    public boolean shutdown(boolean optional) {
+        if (window != null) {
+            window.close();
+        }
+
+        return false;
+    }
+
+    @Override
+    public void suspend() {
+    }
+
+    @Override
+    public void resume() {
+    }
+
+    public static void main(String[] args) {
+        DesktopApplicationContext.main(_StockTrackerWindow.class, args);
+    }
+
+    public static Object getComponent() {
+		try {
+
+            StockTrackerWindow stockTrackerWindow_0 = new StockTrackerWindow();
+            stockTrackerWindow_0.setTitle("Pivot Stock Tracker");
+            stockTrackerWindow_0.setMaximized(true);
+
+                TablePane tablePane_1 = new TablePane();
+                tablePane_1.setStyles("{padding:8, horizontalSpacing:6, verticalSpacing:6}");
+
+                    TablePane.ColumnSequence columnSequence_2 = (TablePane.ColumnSequence)tablePane_1.getColumns();
+
+                        TablePane.Column column_3 = new TablePane.Column();
+                        column_3.setWidth(1, true);
+                        columnSequence_2.add(column_3);
+
+                    TablePane.Row row_4 = new TablePane.Row();
+                    row_4.setHeight(-1);
+
+                        Label label_5 = new Label();
+                        label_5.setText("Pivot Stock Tracker");
+                        label_5.setStyles("{font:{size:14, bold:true}, verticalAlignment:'center'}");
+                        row_4.add(label_5);
+                    TablePane.RowSequence rowSequence_6 = (TablePane.RowSequence)tablePane_1.getRows();
+                    rowSequence_6.add(row_4);
+
+                    TablePane.Row row_7 = new TablePane.Row();
+                    row_7.setHeight(1, true);
+
+                        SplitPane splitPane_8 = new SplitPane();
+                        splitPane_8.setSplitRatio(0.4f);
+
+
+                                Border border_9 = new Border();
+                                border_9.setStyles("{color:10}");
+
+                                    ScrollPane scrollPane_10 = new ScrollPane();
+                                    scrollPane_10.setHorizontalScrollBarPolicy(ScrollPane.ScrollBarPolicy.FILL_TO_CAPACITY);
+                                    scrollPane_10.setVerticalScrollBarPolicy(ScrollPane.ScrollBarPolicy.FILL_TO_CAPACITY);
+
+                                        StackPane stackPane_11 = new StackPane();
+
+                                            TableView tableView_12 = new TableView();
+                                            tableView_12.setSelectMode(TableView.SelectMode.MULTI);
+                                            tableView_12.setStyles("{showHorizontalGridLines:false}");
+
+                                                TableView.ColumnSequence columnSequence_13 = (TableView.ColumnSequence)tableView_12.getColumns();
+
+                                                    TableView.Column column_14 = new TableView.Column();
+                                                    column_14.setName("symbol");
+                                                    column_14.setHeaderData("Symbol");
+                                                    column_14.setWidth(1, true);
+                                                    columnSequence_13.add(column_14);
+
+                                                    TableView.Column column_15 = new TableView.Column();
+                                                    column_15.setName("value");
+                                                    column_15.setHeaderData("Value");
+                                                    column_15.setWidth(1, true);
+
+
+                                                            TableViewNumberCellRenderer tableViewNumberCellRenderer_16 = new TableViewNumberCellRenderer();
+                                                            tableViewNumberCellRenderer_16.setStyles("{horizontalAlignment:'right'}");
+                                                            tableViewNumberCellRenderer_16.setNumberFormat("$0.00");
+                                                        column_15.setCellRenderer(tableViewNumberCellRenderer_16);
+                                                    columnSequence_13.add(column_15);
+
+                                                    TableView.Column column_17 = new TableView.Column();
+                                                    column_17.setName("change");
+                                                    column_17.setHeaderData("Change");
+                                                    column_17.setWidth(1, true);
+
+
+                                                            ChangeCellRenderer changeCellRenderer_18 = new ChangeCellRenderer();
+                                                            changeCellRenderer_18.setStyles("{horizontalAlignment:'right'}");
+                                                            changeCellRenderer_18.setNumberFormat("+0.00;-0.00");
+                                                        column_17.setCellRenderer(changeCellRenderer_18);
+                                                    columnSequence_13.add(column_17);
+                                            stackPane_11.add(tableView_12);
+                                        scrollPane_10.setView(stackPane_11);
+
+
+                                            TableViewHeader tableViewHeader_19 = new TableViewHeader();
+                                            tableViewHeader_19.setTableView(tableView_12);
+                                            tableViewHeader_19.setSortMode(TableViewHeader.SortMode.SINGLE_COLUMN);
+                                        scrollPane_10.setColumnHeader(tableViewHeader_19);
+                                    border_9.setContent(scrollPane_10);
+                            splitPane_8.setLeft(border_9);
+
+
+                                Border border_20 = new Border();
+                                border_20.setStyles("{padding:6, color:10}");
+
+
+                                        BoxPane boxPane_21 = new BoxPane();
+                                        boxPane_21.setOrientation(Orientation.VERTICAL);
+                                        boxPane_21.setStyles("{fill:true}");
+
+                                            Label label_22 = new Label();
+                                            label_22.setTextKey("companyName");
+                                            label_22.setStyles("{font:{size:12, bold:true}}");
+                                            boxPane_21.add(label_22);
+
+                                            Separator separator_23 = new Separator();
+                                            boxPane_21.add(separator_23);
+
+                                            Form form_24 = new Form();
+                                            form_24.setStyles("{padding:0, fill:true, showFlagIcons:false, showFlagHighlight:false,         leftAlignLabels:true}");
+
+                                                Form.Section section_25 = new Form.Section();
+
+
+                                                        ValueMapping valueMapping_26 = new ValueMapping();
+
+                                                        ChangeMapping changeMapping_27 = new ChangeMapping();
+
+                                                        VolumeMapping volumeMapping_28 = new VolumeMapping();
+
+                                                    Label label_29 = new Label();
+                                                    label_29.setTextKey("value");
+                                                    label_29.setTextBindMapping(valueMapping_26);
+                                                    label_29.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_29, "Value");
+                                                    section_25.add(label_29);
+
+                                                    Label label_30 = new Label();
+                                                    label_30.setTextKey("change");
+                                                    label_30.setTextBindMapping(changeMapping_27);
+                                                    label_30.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_30, "Change");
+                                                    section_25.add(label_30);
+
+                                                    Label label_31 = new Label();
+                                                    label_31.setTextKey("openingValue");
+                                                    label_31.setTextBindMapping(valueMapping_26);
+                                                    label_31.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_31, "Open");
+                                                    section_25.add(label_31);
+
+                                                    Label label_32 = new Label();
+                                                    label_32.setTextKey("highValue");
+                                                    label_32.setTextBindMapping(valueMapping_26);
+                                                    label_32.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_32, "High");
+                                                    section_25.add(label_32);
+
+                                                    Label label_33 = new Label();
+                                                    label_33.setTextKey("lowValue");
+                                                    label_33.setTextBindMapping(valueMapping_26);
+                                                    label_33.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_33, "Low");
+                                                    section_25.add(label_33);
+
+                                                    Label label_34 = new Label();
+                                                    label_34.setTextKey("volume");
+                                                    label_34.setTextBindMapping(volumeMapping_28);
+                                                    label_34.setStyles("{horizontalAlignment:'right'}");
+                                                    Form.setLabel(label_34, "Volume");
+                                                    section_25.add(label_34);
+                                                Form.SectionSequence sectionSequence_35 = (Form.SectionSequence)form_24.getSections();
+                                                sectionSequence_35.add(section_25);
+                                            boxPane_21.add(form_24);
+                                    border_20.setContent(boxPane_21);
+                            splitPane_8.setRight(border_20);
+                        row_7.add(splitPane_8);
+                    rowSequence_6.add(row_7);
+
+                    TablePane.Row row_36 = new TablePane.Row();
+                    row_36.setHeight(-1);
+
+                        BoxPane boxPane_37 = new BoxPane();
+                        boxPane_37.setStyles("{horizontalAlignment:'left', verticalAlignment:'center'}");
+
+                            Label label_38 = new Label();
+                            label_38.setText("Symbol");
+                            label_38.setStyles("{font:{bold:true}}");
+                            boxPane_37.add(label_38);
+
+                            TextInput textInput_39 = new TextInput();
+                            textInput_39.setTextSize(10);
+                            textInput_39.setMaximumLength(8);
+                            boxPane_37.add(textInput_39);
+
+                            LinkButton linkButton_40 = new LinkButton();
+                            linkButton_40.setEnabled(false);
+                            linkButton_40.setTooltipText("Add symbol");
+
+                                ButtonData buttonData_41 = new ButtonData();
+                                buttonData_41.setIcon(new URL("file:/share/workspace/pivot/tutorials/src/org/apache/pivot/tutorials/stocktracker/add.png"));
+                                linkButton_40.setButtonData(buttonData_41);
+                            boxPane_37.add(linkButton_40);
+
+                            LinkButton linkButton_42 = new LinkButton();
+                            linkButton_42.setEnabled(false);
+                            linkButton_42.setTooltipText("Remove selected symbols");
+
+                                ButtonData buttonData_43 = new ButtonData();
+                                buttonData_43.setIcon(new URL("file:/share/workspace/pivot/tutorials/src/org/apache/pivot/tutorials/stocktracker/delete.png"));
+                                linkButton_42.setButtonData(buttonData_43);
+                            boxPane_37.add(linkButton_42);
+                        row_36.add(boxPane_37);
+                    rowSequence_6.add(row_36);
+
+                    TablePane.Row row_44 = new TablePane.Row();
+                    row_44.setHeight(-1);
+
+                        TablePane tablePane_45 = new TablePane();
+
+                            TablePane.ColumnSequence columnSequence_46 = (TablePane.ColumnSequence)tablePane_45.getColumns();
+
+                                TablePane.Column column_47 = new TablePane.Column();
+                                column_47.setWidth(1, true);
+                                columnSequence_46.add(column_47);
+
+                                TablePane.Column column_48 = new TablePane.Column();
+                                column_48.setWidth(-1);
+                                columnSequence_46.add(column_48);
+
+                            TablePane.Row row_49 = new TablePane.Row();
+
+                                BoxPane boxPane_50 = new BoxPane();
+
+                                    Label label_51 = new Label();
+                                    label_51.setText("Last Update");
+                                    boxPane_50.add(label_51);
+
+                                    Label label_52 = new Label();
+                                    boxPane_50.add(label_52);
+                                row_49.add(boxPane_50);
+
+                                BoxPane boxPane_53 = new BoxPane();
+                                boxPane_53.setStyles("{horizontalAlignment:'right'}");
+
+                                    Label label_54 = new Label();
+                                    label_54.setText("Data provided by");
+                                    boxPane_53.add(label_54);
+
+                                    LinkButton linkButton_55 = new LinkButton();
+                                    linkButton_55.setButtonData("Yahoo! Finance");
+                                    boxPane_53.add(linkButton_55);
+                                row_49.add(boxPane_53);
+                            TablePane.RowSequence rowSequence_56 = (TablePane.RowSequence)tablePane_45.getRows();
+                            rowSequence_56.add(row_49);
+                        row_44.add(tablePane_45);
+                    rowSequence_6.add(row_44);
+                stockTrackerWindow_0.setContent(tablePane_1);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "stocksTableView", tableView_12);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "symbolTextInput", textInput_39);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "addSymbolButton", linkButton_40);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "removeSymbolsButton", linkButton_42);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "detailPane", boxPane_21);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "lastUpdateLabel", label_52);
+            CodeEmitterRuntime.bind(stockTrackerWindow_0, "yahooFinanceButton", linkButton_55);
+            return stockTrackerWindow_0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+========================
+
+
+calathus
+12/24/2010
+
+
